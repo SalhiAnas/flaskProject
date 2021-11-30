@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Root>
+  <Customers>
+    <Customer CustomerID="HUNGC">
+      <CompanyName>Hungry Coyote Import Store</CompanyName>
+      <ContactName>Yoshi Latimer</ContactName>
+      <ContactTitle>Sales Representative</ContactTitle>
+      <telephone>(503) 555-6874</telephone>
+      <Fax>(503) 555-2376</Fax>
+      <FullAddress>
+        <Address>City Center Plaza 516 Main St.</Address>
+        <Region>OR</Region>
+        <City>Elgin</City>
+        <Region>OR</Region>
+        <PostalCode>97827</PostalCode>
+        <Country>USA</Country>
+      </FullAddress>
+    </Customer>
+  </Customers>
+    <Order>
+      <CustomerID>LETSS</CustomerID>
+      <EmployeeID>4</EmployeeID>
+      <OrderDate>1998-02-12T00:00:00</OrderDate>
+      <RequiredDate>1998-03-12T00:00:00</RequiredDate>
+      <ShipInfo ShippedDate="1998-02-13T00:00:00">
+        <ShipVia>2</ShipVia>
+        <Freight>90.97</Freight>
+        <ShipName>Let's Stop N Shop</ShipName>
+        <ShipAddress>87 Polk St. Suite 5</ShipAddress>
+        <ShipCity>San Francisco</ShipCity>
+        <ShipRegion>CA</ShipRegion>
+        <ShipPostalCode>94117</ShipPostalCode>
+        <ShipCountry>USA</ShipCountry>
+      </ShipInfo>
+    </Order>
+  </Orders>
+</Root>
