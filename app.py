@@ -10,7 +10,8 @@ from Schema import Schema,Table,Column
 
 
 translate = {
-            'string': 'varchar',
+            'ID': 'varchar(30)',
+            'string': 'text',
             'boolean': 'boolean',
             'decimal': 'numeric',
             'float': 'real',
@@ -27,23 +28,16 @@ translate = {
             'hexBinary': 'bytea',
             'base64Binary': 'bytea',
             'anyURI': 'varchar',
-            'QName': None,
-            'NOTATION': None,
-            'normalizedString': '%(string)s',
-            'token': '%(string)',
+            'normalizedString': 'varchar',
+            'token': 'varchar',
             'integer': 'int',
-            'nonPositiveInteger': '%(integer)s',
-            'negativeInteger': '%(integer)s',
-            'long': '%(integer)s',
-            'int': '%(integer)s',
-            'short': '%(integer)s',
-            'byte': '%(integer)s',
-            'nonNegativeInteger': '%(integer)s',
-            'unsignedLong': '%(integer)s',
-            'unsignedInt': '%(integer)s',
-            'unsignedShort': '%(integer)s',
-            'unsignedByte': '%(integer)s',
-            'positiveInteger': '%(integer)s',
+            'nonPositiveInteger': 'int',
+            'negativeInteger': 'int',
+            'long': 'long',
+            'int': 'int',
+            'short': 'int',
+            'byte': 'bit',
+            'positiveInteger': 'int',
         }
 
 
@@ -108,7 +102,7 @@ def parseFile(xmlSchema, XMlFile):
 
 
 def extractSchema(xmlSchema):
-    SqlSchema = Schema(xmlSchema.filename)
+    SqlSchema = Schema(os.path.splitext(xmlSchema.filename)[0])
     infile = open("upload/" + xmlSchema.filename, "r")
     contents = infile.read()
     soup = BeautifulSoup(contents, 'xml')
@@ -121,7 +115,7 @@ def extractSchema(xmlSchema):
         Attributes = complexType.findChildren("attribute", recursive=False)
         for Child in Children:
             if Child.get("type") is not None:
-                column = Column(Child.get("name"), Child.get("type"), False,
+                column = Column(Child.get("name"), Child.get("type"), False,False,
                                 True if Child.get("minOccurs") == "0" else False)
                 table.add_column(column)
         for Attribute in Attributes:
@@ -138,14 +132,12 @@ def extractSchema(xmlSchema):
             ParentTable = SqlSchema.get_table(element.get("name"))
             for childElement in childElements:
                 if childElement.get("type") is None:
-                    # if ParentTable.get_pk() is not None:
-                    # childTable.add_fk(ParentTable.get_pk())
                     print(childElement.get("name"), "-----> ", element.get("name"))
                     childTable = SqlSchema.get_table(childElement.get("name"))
                     if ParentTable.get_pk() is not None:
                         pk = ParentTable.get_pk()
                         fk = Column(pk.get_name(), pk.get_datatype(), False, True, False)
-                        childTable.add_fk(fk)
+                        childTable.add_fk(fk,ParentTable.get_name())
 
     for t in SqlSchema.get_tables():
         print("-----", t.get_name())
@@ -155,9 +147,23 @@ def extractSchema(xmlSchema):
     return SqlSchema
 
 
-def creatingSqlFile(SqlSchema):
-    f = open("/download/"+SqlSchema.get_name(), 'w')
-
+def creatingSqlFile(SqlSchema,xmlFile):
+    f = open("download/"+SqlSchema.get_name()+".sql", 'w')
+    for t in SqlSchema.get_tables():
+        f.write("\ncreate table "+t.get_name()+" ( ")
+        for c in t.get_columns():
+            name = c.get_datatype().split(":")
+            dataType = " NOT NULL " if c.is_nullable() else ""
+            primary = " PRIMARY KEY " if c.is_primary() else ""
+            f.write(c.get_name() + " " + translate[name[1]] + dataType + primary)
+            if c != t.get_columns()[len(t.get_columns())-1]:
+                f.write(", ")
+        fk=t.get_fk()
+        if fk is not None:
+            parentTable = fk.get_fkParent()
+            f.write(", FOREIGN KEY (" + fk.get_name() + ") REFERENCES " +parentTable+ "(" + fk.get_name() + "));")
+        else:
+            f.write(");")
     return 0
 
 if __name__ == '__main__':
