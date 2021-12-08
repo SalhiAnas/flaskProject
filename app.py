@@ -152,9 +152,13 @@ def creatingSqlFile(SqlSchema, xmlFile):
         f.write("\ncreate table " + t.get_name() + " ( ")
         for c in t.get_columns():
             name = c.get_datatype().split(":")
-            dataType = " NOT NULL " if c.is_nullable() else ""
+            nullable = " NOT NULL " if c.is_nullable() else ""
+            if translate[name[1]] is not None:
+                dataType=translate[name[1]]
+            else:
+                dataType="text"
             primary = " PRIMARY KEY " if c.is_primary() else ""
-            f.write(c.get_name() + " " + translate[name[1]] + dataType + primary)
+            f.write(c.get_name() + " " + dataType + nullable + primary)
             if c != t.get_columns()[len(t.get_columns()) - 1]:
                 f.write(", ")
         fk = t.get_fk()
@@ -185,7 +189,11 @@ def creatingSqlFile(SqlSchema, xmlFile):
                     f.write("'" + element.attrib[t.get_pk().get_name()] + "'")
                     if c != t.get_columns()[len(t.get_columns()) - 1]:
                         f.write(", ")
-                if not element.findall(c.get_name()) and c.is_primary() is False and c.is_foreign() is False:
+                if c.is_primary() is False and c.get_name() in element.attrib:
+                    f.write("'" + element.attrib[c.get_name()] + "'")
+                    if c != t.get_columns()[len(t.get_columns()) - 1]:
+                        f.write(", ")
+                if not element.findall(c.get_name()) and c.is_primary() is False and c.is_foreign() is False and c.get_name() not in element.attrib:
                     f.write("null")
                     if c != t.get_columns()[len(t.get_columns()) - 1]:
                         f.write(", ")
