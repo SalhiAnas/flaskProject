@@ -1,58 +1,59 @@
 import os
 from collections import defaultdict
+import xml.etree.ElementTree as ET
+from lxml import etree
 
 import xmlschema
-from flask import Flask, render_template, request
-from werkzeug.utils import secure_filename
-from bs4 import BeautifulSoup,NavigableString,Tag
+from flask import Flask, render_template, request, current_app, send_from_directory, url_for, send_file
+from werkzeug.utils import secure_filename, redirect
+from bs4 import BeautifulSoup, NavigableString, Tag
 
-from Schema import Schema,Table,Column
-
+from Schema import Schema, Table, Column
 
 translate = {
-            'ID': 'varchar(30)',
-            'string': 'text',
-            'boolean': 'boolean',
-            'decimal': 'numeric',
-            'float': 'real',
-            'double': 'double precision',
-            'duration': 'interval',
-            'dateTime': 'timestamp',
-            'time': 'time',
-            'date': 'date',
-            'gYearMonth': 'timestamp',
-            'gYear': 'timestamp',
-            'gMonthDay': 'timestamp',
-            'gDay': 'timestamp',
-            'gMonth': 'timestamp',
-            'hexBinary': 'bytea',
-            'base64Binary': 'bytea',
-            'anyURI': 'varchar',
-            'normalizedString': 'varchar',
-            'token': 'varchar',
-            'integer': 'int',
-            'nonPositiveInteger': 'int',
-            'negativeInteger': 'int',
-            'long': 'long',
-            'int': 'int',
-            'short': 'int',
-            'byte': 'bit',
-            'positiveInteger': 'int',
-        }
-
-
+    'ID': 'varchar(30)',
+    'string': 'text',
+    'boolean': 'boolean',
+    'decimal': 'numeric',
+    'float': 'real',
+    'double': 'double precision',
+    'duration': 'interval',
+    'dateTime': 'timestamp',
+    'time': 'time',
+    'date': 'date',
+    'gYearMonth': 'timestamp',
+    'gYear': 'timestamp',
+    'gMonthDay': 'timestamp',
+    'gDay': 'timestamp',
+    'gMonth': 'timestamp',
+    'hexBinary': 'bytea',
+    'base64Binary': 'bytea',
+    'anyURI': 'varchar',
+    'normalizedString': 'varchar',
+    'token': 'varchar',
+    'integer': 'int',
+    'nonPositiveInteger': 'int',
+    'negativeInteger': 'int',
+    'long': 'long',
+    'int': 'int',
+    'short': 'int',
+    'byte': 'bit',
+    'positiveInteger': 'int',
+}
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 app.config['XML_UPLOAD_EXTENSIONS'] = ['.xml', '.XML']
-app.config['XSD_UPLOAD_EXTENSIONS'] = ['.xsd', '.XSD','.XSLT','xslt']
+app.config['XSD_UPLOAD_EXTENSIONS'] = ['.xsd', '.XSD', '.XSLT', 'xslt']
 
 app.config['UPLOAD_PATH'] = 'upload'
+app.config['DOWNLOAD_PATH'] = 'download'
 
 
 @app.route('/')
 def index():
     return render_template("index.html")
+
 
 @app.route('/uploader', methods=['GET', 'POST'])
 def upload_file():
@@ -61,7 +62,7 @@ def upload_file():
         f2 = request.files['xmlFile']
         xmlSchemaname = secure_filename(f1.filename)
         xmlfilename = secure_filename(f2.filename)
-        if xmlfilename != '' and xmlSchemaname!= '':
+        if xmlfilename != '' and xmlSchemaname != '':
             file_ext = os.path.splitext(xmlfilename)[1]
             if file_ext not in app.config['XML_UPLOAD_EXTENSIONS']:
                 return 'the file uploaded is not an xml!'
@@ -73,29 +74,26 @@ def upload_file():
         f1.save(os.path.join(app.config['UPLOAD_PATH'], secure_filename(f1.filename)))
         f2.save(os.path.join(app.config['UPLOAD_PATH'], secure_filename(f2.filename)))
 
-        if parseFile(f1,f2) == "valid":
-            SqlSchema=extractSchema(f1)
-            creatingSqlFile(SqlSchema,f2)
+        if parseFile(f1, f2) == "valid":
+            SqlSchema = extractSchema(f1)
+            creatingSqlFile(SqlSchema, f2)
+            return "valid"
+            # return send_file(os.path.join(app.config['DOWNLOAD_PATH'],"shiporder.sql"), as_attachment=True)
 
-            return "Generating the sql file"
-        elif parseFile(f1,f2) =="invalid":
+            # return "Generating the sql file"
+        elif parseFile(f1, f2) == "invalid":
             return "this document is not valid"
         else:
-            return parseFile(f1,f2)
-
-
-
-
-
+            return parseFile(f1, f2)
 
 
 def parseFile(xmlSchema, XMlFile):
     try:
-        XS = xmlschema.XMLSchema("upload/"+xmlSchema.filename)
-        if(XS.is_valid("upload/"+XMlFile.filename)):
-                return 'valid'
+        XS = xmlschema.XMLSchema("upload/" + xmlSchema.filename)
+        if (XS.is_valid("upload/" + XMlFile.filename)):
+            return 'valid'
         else:
-                return 'invalid'
+            return 'invalid'
     except Exception as e:
         error_string = str(e)
         return error_string
@@ -115,7 +113,7 @@ def extractSchema(xmlSchema):
         Attributes = complexType.findChildren("attribute", recursive=False)
         for Child in Children:
             if Child.get("type") is not None:
-                column = Column(Child.get("name"), Child.get("type"), False,False,
+                column = Column(Child.get("name"), Child.get("type"), False, False,
                                 True if Child.get("minOccurs") == "0" else False)
                 table.add_column(column)
         for Attribute in Attributes:
@@ -137,7 +135,7 @@ def extractSchema(xmlSchema):
                     if ParentTable.get_pk() is not None:
                         pk = ParentTable.get_pk()
                         fk = Column(pk.get_name(), pk.get_datatype(), False, True, False)
-                        childTable.add_fk(fk,ParentTable.get_name())
+                        childTable.add_fk(fk, ParentTable.get_name())
 
     for t in SqlSchema.get_tables():
         print("-----", t.get_name())
@@ -147,34 +145,69 @@ def extractSchema(xmlSchema):
     return SqlSchema
 
 
-def creatingSqlFile(SqlSchema,xmlFile):
-    f = open("download/"+SqlSchema.get_name()+".sql", 'w')
+def creatingSqlFile(SqlSchema, xmlFile):
+    f = open("download/" + SqlSchema.get_name() + ".sql", 'w')
+    f.write("# Generating the DDL lines \n #------------------------------------------------#")
     for t in SqlSchema.get_tables():
-        f.write("\ncreate table "+t.get_name()+" ( ")
+        f.write("\ncreate table " + t.get_name() + " ( ")
         for c in t.get_columns():
             name = c.get_datatype().split(":")
             dataType = " NOT NULL " if c.is_nullable() else ""
             primary = " PRIMARY KEY " if c.is_primary() else ""
             f.write(c.get_name() + " " + translate[name[1]] + dataType + primary)
-            if c != t.get_columns()[len(t.get_columns())-1]:
+            if c != t.get_columns()[len(t.get_columns()) - 1]:
                 f.write(", ")
-        fk=t.get_fk()
+        fk = t.get_fk()
         if fk is not None:
             parentTable = fk.get_fkParent()
-            f.write(", FOREIGN KEY (" + fk.get_name() + ") REFERENCES " +parentTable+ "(" + fk.get_name() + "));")
+            f.write(", FOREIGN KEY (" + fk.get_name() + ") REFERENCES " + parentTable + "(" + fk.get_name() + "));")
         else:
             f.write(");")
+
+    f.write("\n# Generating the DML lines \n #------------------------------------------------#\n")
+    infile = open("upload/" + xmlFile.filename, "r")
+    contents = infile.read()
+    tree = etree.parse("upload/" + xmlFile.filename)
+    myroot = tree.getroot()
+    for t in SqlSchema.get_tables():
+        f.write("\nINSERT INTO " + t.get_name() + " (")
+        for c in t.get_columns():
+            f.write(c.get_name())
+            if c != t.get_columns()[len(t.get_columns()) - 1]:
+                f.write(", ")
+        f.write(" ) VALUES ")
+        elements = myroot.findall(".//" + t.get_name())
+        for element in elements:
+            print("//" + element.tag)
+            f.write(" ( ")
+            for c in t.get_columns():
+                if c.is_primary():
+                    f.write("'" + element.attrib[t.get_pk().get_name()] + "'")
+                    if c != t.get_columns()[len(t.get_columns()) - 1]:
+                        f.write(", ")
+                if not element.findall(c.get_name()) and c.is_primary() is False and c.is_foreign() is False:
+                    f.write("null")
+                    if c != t.get_columns()[len(t.get_columns()) - 1]:
+                        f.write(", ")
+                for item in element.findall(c.get_name()):
+                    f.write("'" + item.text + "'")
+                    if item != element.findall(c.get_name())[len(element.findall(c.get_name())) - 1]:
+                        f.write(", ")
+                    f.write(", ")
+                    print(item.text)
+
+            if t.get_fk() is not None:
+                attribute = SqlSchema.get_table(t.get_fk().get_fkParent())
+                print("*****" + element.getparent().attrib[attribute.get_pk().get_name()])
+                f.write("'" + element.getparent().attrib[attribute.get_pk().get_name()] + "'")
+
+            if element != elements[len(elements) - 1]:
+                f.write(" ) ,")
+            else:
+                f.write(" ) ")
+        f.write(";")
     return 0
+
 
 if __name__ == '__main__':
     app.run()
-
-
-
-
-
-
-
-
-
-
