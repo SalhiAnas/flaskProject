@@ -1,11 +1,51 @@
 <!DOCTYPE html>
 <html>
+   <head>
+      {{ bootstrap.load_css() }}
+   </head>
    <body>
-      <form action = "http://localhost:5000/uploader" method = "POST"
-         enctype = "multipart/form-data">
-          <input type = "file" name = "xmlSchema" accept="text/xsd" />
-         <input type = "file" name = "xmlFile" accept="text/xml" />
-         <input type = "submit" />
-      </form>
+      {{ bootstrap.load_js() }}
+      <h1>
+        <center>
+         welcome to our website
+        </center> 
+      </h1>
+      <br /> <br /> <br />
+      <center>
+         <form action = "http://localhost:5000/uploader" method = "POST" enctype = "multipart/form-data">
+            <div class="custom-file" style='width:30%;height:50%;'>
+              <input type="file" class="custom-file-input" id="customFile" name = "xmlSchema" accept="text/xsd" >
+              <label class="custom-file-label" for="customFile">Chooose a xsd schema</label>
+            </div>
+            <br />
+            <br />
+            <div class="custom-file" style='width:30%;height:50%;'>
+               <input type="file" class="custom-file-input" id="customFile" name = "xmlFile" accept="text/xml">
+               <label class="custom-file-label" for="customFile">Chooose a xml file</label>
+             </div>
+             <br />
+             <br />
+             <div class="submit">
+               <input type="submit" value="Submit">
+            </div>
+          </form>     
+       </center>
+       <!--- render another template for getting the result-->
+       <!--generate pdf file-->
+         <div>
+            <hr >
+            <form action = "http://localhost:5000/uploader" method = "GET" enctype = "multipart/form-data">
+                  <!--get the result-->
+            </form>
+         </div>
    </body>
 </html>
+<script>
+$(function () {
+  $('submit').submit(function (e) {
+    e.preventDefault();
+    window.open('http://react-etc.net/files/typescript-book/typescript.pdf', '_blank');
+    this.submit();
+  });
+});
+</script>

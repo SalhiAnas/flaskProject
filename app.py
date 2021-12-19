@@ -7,12 +7,14 @@ from glob import glob
 import sys
 from bs4 import BeautifulSoup
 import xmlschema
+from flask_bootstrap import Bootstrap
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 from xmlschema.namespaces import NamespaceView
 from xmlschema.validators import XsdComplexType
 
 app = Flask(__name__)
+bootstrap = Bootstrap(app)
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 app.config['XML_UPLOAD_EXTENSIONS'] = ['.xml', '.XML']
 app.config['XSD_UPLOAD_EXTENSIONS'] = ['.xsd', '.XSD','.XSLT','xslt']
@@ -50,29 +52,30 @@ def upload_file():
 
 
 def parsefile(xmlSchema, XMlFile):
-    try:
-        tree = ET.parse("upload/"+xmlSchema.filename)
-        # print(tree.)
+    if request.method == 'GET':
+        try:
+            tree = ET.parse("upload/"+xmlSchema.filename)
+                # print(tree.)
 
-        XS = xmlschema.XMLSchema("upload/"+xmlSchema.filename)
-        # schema.types
-        # NamespaceView({'vehicleType': XsdComplexType(name='vehicleType')})
-        # pprint(dict(XS.elem))
+            XS = xmlschema.XMLSchema("upload/"+xmlSchema.filename)
+                # schema.types
+                # NamespaceView({'vehicleType': XsdComplexType(name='vehicleType')})
+                # pprint(dict(XS.elem))
 
-        # NamespaceView({'vehicleType': XsdComplexType(name='vehicleType')})
-        f = open("upload/"+xmlSchema.filename, "r")
-        soup = BeautifulSoup(f.read())
+                # NamespaceView({'vehicleType': XsdComplexType(name='vehicleType')})
+            f = open("upload/"+xmlSchema.filename, "r")
+            soup = BeautifulSoup(f.read())
 
-        for element in soup.find_all('xs:element'):
-            print(element['name'],element['name'])  # prints name attribute value
-        if(XS.is_valid("upload/"+XMlFile.filename)):
-            return'This is a well-formed XML document'
-        else:
-            return 'This is not a well-formed XML document'
-    except Exception as e:
-        error_string = str(e)
-        error="Error \n "+error_string
-        return error
+            for element in soup.find_all('xs:element'):
+                    print(element['name'],element['name'])  # prints name attribute value
+            if(XS.is_valid("upload/"+XMlFile.filename)):
+                    return render_template("success.html")
+            else:
+                    return 'This is not a well-formed XML document'
+        except Exception as e:
+            error_string = str(e)
+            error="Error \n "+error_string
+            return error
 
 
 
