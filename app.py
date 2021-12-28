@@ -69,7 +69,7 @@ def parsefile(xmlSchema, XMlFile):
             for element in soup.find_all('xs:element'):
                     print(element['name'],element['name'])  # prints name attribute value
             if(XS.is_valid("upload/"+XMlFile.filename)):
-                    return render_template("success.html")
+                    return "well format"
             else:
                     return 'This is not a well-formed XML document'
         except Exception as e:
