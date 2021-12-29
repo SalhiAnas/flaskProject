@@ -73,12 +73,11 @@ def upload_file():
             return 'please upload both files !'
         f1.save(os.path.join(app.config['UPLOAD_PATH'], secure_filename(f1.filename)))
         f2.save(os.path.join(app.config['UPLOAD_PATH'], secure_filename(f2.filename)))
-
         if parseFile(f1, f2) == "valid":
             SqlSchema = extractSchema(f1)
-            creatingSqlFile(SqlSchema, f2)
-            return "valid"
-            # return send_file(os.path.join(app.config['DOWNLOAD_PATH'],"shiporder.sql"), as_attachment=True)
+            sqlFile=creatingSqlFile(SqlSchema, f2)
+            print(sqlFile.name)
+            return send_file(sqlFile.name, as_attachment=True)
 
             # return "Generating the sql file"
         elif parseFile(f1, f2) == "invalid":
@@ -214,7 +213,9 @@ def creatingSqlFile(SqlSchema, xmlFile):
             else:
                 f.write(" ) ")
         f.write(";")
-    return 0
+    return f
+
+
 
 
 if __name__ == '__main__':

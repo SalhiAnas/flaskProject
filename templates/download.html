@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<a href="{{ url_for('download', filename="shiporder.sql") }}">File</a>
-</body>
-</html>
+<!doctype html>
+  <title>Download File</title>
+  <h1>Download File</h1>
+  <body class="body">
+     <div class="container" align="left">
+      <a href="{{ url_for('download', filename=value) }}" download><button class='btn btn-default'>Download</button></a>
+     </div>
+  </body>
