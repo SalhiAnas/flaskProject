@@ -65,12 +65,12 @@ def upload_file():
         if xmlfilename != '' and xmlSchemaname != '':
             file_ext = os.path.splitext(xmlfilename)[1]
             if file_ext not in app.config['XML_UPLOAD_EXTENSIONS']:
-                return 'the file uploaded is not an xml!'
+                return redirect(url_for("error", name="Le fichier que vous avez uploader n'est pas un XMl."));
             file_ext = os.path.splitext(xmlSchemaname)[1]
             if file_ext not in app.config['XSD_UPLOAD_EXTENSIONS']:
-                return 'the file uploaded is not an xmlSchema!'
+                return redirect(url_for("error", name="Le fichier que vous avez uploader n'est pas un  schema."));
         else:
-            return 'please upload both files !'
+            return redirect(url_for("error", name="Veuillez uploader les deux fichiers."));
         f1.save(os.path.join(app.config['UPLOAD_PATH'], secure_filename(f1.filename)))
         f2.save(os.path.join(app.config['UPLOAD_PATH'], secure_filename(f2.filename)))
         if parseFile(f1, f2) == "valid":
@@ -81,7 +81,7 @@ def upload_file():
             return send_file("download/shiporder.sql", as_attachment=True,cache_timeout=0)
             # return "Generating the sql file"
         elif parseFile(f1, f2) == "invalid":
-            return "this document is not valid"
+            return redirect(url_for("error",name="Le fichier xml n'est valide"));
         else:
             return parseFile(f1, f2)
 
@@ -124,6 +124,8 @@ def extractSchema(xmlSchema):
 
     elements = soup.find("element").findAll("element")
     for element in elements:
+
+
         if element.get("type") is None:
             childElements = element.find().find().findChildren("element", recursive=False)
             ParentTable = SqlSchema.get_table(element.get("name"))
@@ -216,7 +218,9 @@ def creatingSqlFile(SqlSchema, xmlFile):
     f.close()
     return f
 
-
+@app.route('/error/<name>')
+def error(name):
+    return render_template("error.html", error_message=name)
 
 
 if __name__ == '__main__':
