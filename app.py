@@ -76,9 +76,9 @@ def upload_file():
         if parseFile(f1, f2) == "valid":
             SqlSchema = extractSchema(f1)
             sqlFile=creatingSqlFile(SqlSchema, f2)
-            print(sqlFile.name)
-            return send_file(sqlFile.name, as_attachment=True)
-
+            print('/download/'+sqlFile.name.split("/")[1])
+            # return send_from_directory('upload', 'adresse.xml')
+            return send_file("download/shiporder.sql", as_attachment=True,cache_timeout=0)
             # return "Generating the sql file"
         elif parseFile(f1, f2) == "invalid":
             return "this document is not valid"
@@ -213,6 +213,7 @@ def creatingSqlFile(SqlSchema, xmlFile):
             else:
                 f.write(" ) ")
         f.write(";")
+    f.close()
     return f
 
 
