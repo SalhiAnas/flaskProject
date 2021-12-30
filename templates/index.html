@@ -51,6 +51,9 @@
     text-transform: capitalize;
     text-align: center;
 }
+.guide{
+
+}
     </style>
    <body>
 {#      <form action = "http://localhost:5000/uploader" method = "POST"#}
@@ -64,7 +67,10 @@
 {#              </div>#}
 {#         <input type = "submit" />#}
 {#      </form>#}
-
+<div class="container" >
+    <br />
+    <br />
+    <div class="header">
       <form action = "http://localhost:5000/uploader" method = "POST"
          enctype = "multipart/form-data">
           <div class="container">
@@ -83,14 +89,30 @@
                 </div>
             </div>
           </div>
+        </form>
+    </div>
+          <br />
+          <br />
           <div class="row">
               <div class="col-md-12 text-center">
               <button class="btn-success btn-lg" type = "submit">Upload</button>
               </div>
           </div>
-
+          <hr >
+          <footer>
+              <center>
+              <b><h2>This Project is about transform a xml Document into relational Object sql. </h2></b>
+              </center>
+              <br />
+              <p><b>This is a simplest guide of use :</b></p>
+              <div id="guide">
+                <b>Use XML validator to perform syntax check and to validate XML using schema validation (XSD + DTD). Simple XML Editor helps to fix bugs and to beautify/minify your XML output. Sign up to use XML Subset Editor: Validate faster, add detailed content rules, visualize XML, share test results
+                    <br /> to read more about xml click on this  :  <a href="https://www.w3.org/XML/">https://www.w3.org/XML/</a>
+                </b>
+              </div>
+          </footer>
       </form>
-
+</div>
 
 
        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
