@@ -78,7 +78,7 @@ def upload_file():
             sqlFile=creatingSqlFile(SqlSchema, f2)
             print('/download/'+sqlFile.name.split("/")[1])
             # return send_from_directory('upload', 'adresse.xml')
-            return send_file("download/shiporder.sql", as_attachment=True,cache_timeout=0)
+            return send_file(sqlFile.name, as_attachment=True,cache_timeout=0)
             # return "Generating the sql file"
         elif parseFile(f1, f2) == "invalid":
             return redirect(url_for("error",name="Le fichier xml n'est valide"));
